@@ -20,7 +20,7 @@ local corona_rf = RF_NOCOLORMAPS|RF_NOSPLATBILLBOARD|RF_BRIGHTMASK
 local splat_rf = corona_rf|RF_SLOPESPLAT|RF_OBJECTSLOPESPLAT
 
 rawset(_G, "corona_toggle", true) --true by default for testing
-rawset(_G, "lite_mode", true) --for performance reasons, true will be the default
+rawset(_G, "lite_mode", not true) --for performance reasons, true will be the default
 rawset(_G, "floorsprites", true) --If lite_mode isn't enough, disable floorsprites lol
 local corona_size = CV_FindVar("corona_size")
 local LoadedObjects = {} --let's not allow the modification of this
@@ -67,7 +67,7 @@ local function InitCorona(mo, mobjtype)
     corona.coronascale = cmobj.scale or FU
     corona.zoffset = cmobj.zoffset or 0
     corona.nothink = cmobj.nothink
-    corona.postthinkmove = cmobj.postthinkmove
+    corona.postthinkmove = cmobj.postthinkmove or true
 
     if corona.postthinkmove then insert(postthink_coronas, corona) end
 
@@ -85,8 +85,9 @@ local function InitCorona(mo, mobjtype)
     --Set corona's visual properties
     corona.renderflags = $|corona_rf
     corona.alpha = alpha
-    corona.color = color
-    corona.colorized = true
+--     corona.color = color
+	mo.translation = mo.cmobj._translation
+--     corona.colorized = true
 
     --Mostly for flipped gravity
     corona.eflags = mo.eflags
@@ -109,10 +110,12 @@ local function InitCorona(mo, mobjtype)
 		floorlight.floor = true --and mark it as a floor light
 		floorlight.nothink = cmobj.nothink
         floorlight.target = corona
-        floorlight.color = corona.color
+--         floorlight.color = corona.color
+		mo.translation = mo.cmobj._translation
         floorlight.alpha = corona.alpha
-		floorlight.radius = mo.radius
+		floorlight.radius = corona.radius
         floorlight.renderflags = $|corona_rf
+		corona.floor = floorlight
 		if not lite_mode then
 			floorlight.renderflags = splat_rf
 		end
@@ -132,6 +135,7 @@ addHook("AddonLoaded", function()
             InitCorona(mo, i)
         end, i)
         LoadedObjects[i] = true
+		LightObjects[i]._translation = "GKS_Corona_"..skincolors[LightObjects[i].color].ramp[5] --cache skincolor ramp
         print("Corona sucessfully added for object type "..i)
     end
 end)
@@ -168,12 +172,12 @@ local function Corona(mo)
         return
     end
 
-	if mo.nothink then return end
+-- 	if mo.nothink then return end
 
     if mo.scale - t.scale then mo.scale = t.scale end
-    if not mo.postthinkmove then
+--     if not mo.postthinkmove then
         P_FollowMobj(mo, t)
-    end
+--     end
 
     --Adapt to flipped gravity
     mo.eflags = t.eflags
@@ -201,7 +205,8 @@ local function Corona(mo)
         local color = (state_is_table and mo.states[t.state].color) or mo.cmobj.color or t.color or SILVER
         local alpha = ((state_is_table and mo.states[t.state].alpha) or mo.cmobj.alpha or FU)-1
 
-        if mo.color != color then mo.color = color end
+--         if mo.color != color then mo.color = color end
+		mo.translation = mo.cmobj._translation
         if mo.alpha != alpha then mo.alpha = alpha end
     else
         mo.flags2 = $|MF2_DONTDRAW
@@ -216,7 +221,7 @@ local function CoronaSplat(mo)
         return
     end
 
-	if mo.nothink then return end
+-- 	if mo.nothink then return end
 
     local t = mo.target
 
@@ -230,7 +235,8 @@ local function CoronaSplat(mo)
     local scale = maxScale - FixedMul(ratio, maxScale - minScale)
 
     --Copy everything from the main corona
-    mo.color = t.color
+--     mo.color = t.color
+	mo.translation = t.translation
     mo.alpha = t.alpha
     mo.flags2 = t.flags2
     mo.eflags = t.eflags
@@ -241,6 +247,7 @@ local function CoronaSplat(mo)
     local z = (flipped and t.ceilingz) or t.floorz
     if ((mo.x - t.x) or (mo.y - t.y) or (mo.z - z)) then --move it
         P_MoveOrigin(mo, t.x, t.y, z)
+		P_TryMove(mo, mo.x, mo.y)
     end
 end
 
@@ -251,8 +258,12 @@ local function PostThink()
 		local mo = postthink_coronas[i]
 		--make sure it exists
         if (mo and mo.valid and mo.target) then
-            local t = mo.target
-            P_FollowMobj(mo, t)
+--             local t = mo.target
+--             P_FollowMobj(mo, t)
+			Corona(mo)
+			if mo.floor then --it has a floor corona as well
+				CoronaSplat(mo.floor)
+			end
         else
             remove(postthink_coronas, i) --otherwise it's useless, remove it
         end
@@ -260,7 +271,7 @@ local function PostThink()
 end
 
 --Hook all
-addHook("MobjThinker", Corona, MT_GKS_CORONA)
-addHook("MobjThinker", CoronaSplat, MT_GKS_CORONA_SPLAT)
+-- addHook("MobjThinker", Corona, MT_GKS_CORONA)
+-- addHook("MobjThinker", CoronaSplat, MT_GKS_CORONA_SPLAT)
 addHook("ThinkFrame", LoadCoronaMidJoin)
 addHook("PostThinkFrame", PostThink)
