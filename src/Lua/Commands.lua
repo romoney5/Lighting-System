@@ -12,7 +12,9 @@ COM_AddCommand("corona_toggle", function()
         if gamestate != GS_LEVEL then return end
 		for mo in mobjs.iterate() do
 			--make sure it exists
-			if (mo and mo.valid and mo.type == MT_GKS_CORONA) then
+			if (mo and mo.valid and (mo.type == MT_GKS_CORONA or mo.type == MT_GKS_CORONA_SPLAT)) then
+				print("removed "..tostring(mo))
+				mo.target = nil
 				P_RemoveMobj(mo)
 			end
 		end

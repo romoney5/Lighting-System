@@ -85,9 +85,8 @@ local function InitCorona(mo, mobjtype)
     --Set corona's visual properties
     corona.renderflags = $|corona_rf
     corona.alpha = alpha
---     corona.color = color
-	mo.translation = mo.cmobj._translation
---     corona.colorized = true
+    corona.color = color
+    corona.colorized = true
 
     --Mostly for flipped gravity
     corona.eflags = mo.eflags
@@ -110,8 +109,7 @@ local function InitCorona(mo, mobjtype)
 		floorlight.floor = true --and mark it as a floor light
 		floorlight.nothink = cmobj.nothink
         floorlight.target = corona
---         floorlight.color = corona.color
-		mo.translation = mo.cmobj._translation
+        floorlight.color = corona.color
         floorlight.alpha = corona.alpha
 		floorlight.radius = corona.radius
         floorlight.renderflags = $|corona_rf
@@ -135,7 +133,7 @@ addHook("AddonLoaded", function()
             InitCorona(mo, i)
         end, i)
         LoadedObjects[i] = true
-		LightObjects[i]._translation = "GKS_Corona_"..skincolors[LightObjects[i].color].ramp[5] --cache skincolor ramp
+-- 		LightObjects[i]._translation = "GKS_Corona_"..skincolors[LightObjects[i].color].ramp[5] --cache skincolor ramp
         print("Corona sucessfully added for object type "..i)
     end
 end)
@@ -205,8 +203,7 @@ local function Corona(mo)
         local color = (state_is_table and mo.states[t.state].color) or mo.cmobj.color or t.color or SILVER
         local alpha = ((state_is_table and mo.states[t.state].alpha) or mo.cmobj.alpha or FU)-1
 
---         if mo.color != color then mo.color = color end
-		mo.translation = mo.cmobj._translation
+        if mo.color != color then mo.color = color end
         if mo.alpha != alpha then mo.alpha = alpha end
     else
         mo.flags2 = $|MF2_DONTDRAW
@@ -235,8 +232,7 @@ local function CoronaSplat(mo)
     local scale = maxScale - FixedMul(ratio, maxScale - minScale)
 
     --Copy everything from the main corona
---     mo.color = t.color
-	mo.translation = t.translation
+    mo.color = t.color
     mo.alpha = t.alpha
     mo.flags2 = t.flags2
     mo.eflags = t.eflags
@@ -261,7 +257,7 @@ local function PostThink()
 --             local t = mo.target
 --             P_FollowMobj(mo, t)
 			Corona(mo)
-			if mo.floor then --it has a floor corona as well
+			if mo.floor and mo.floor.valid then --it has a floor corona as well
 				CoronaSplat(mo.floor)
 			end
         else

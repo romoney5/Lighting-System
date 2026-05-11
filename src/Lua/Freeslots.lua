@@ -17,7 +17,7 @@ mobjinfo[MT_GKS_CORONA] = {
 	radius = 16*FU,
 	height = 16*FU,
 	dispoffset = 50,
-	flags = MF_NOBLOCKMAP|MF_NOGRAVITY|MF_SCENERY|MF_NOCLIPHEIGHT|MF_NOCLIP|MF_NOTHINK
+	flags = MF_NOBLOCKMAP|MF_NOGRAVITY|MF_SCENERY|MF_NOCLIPHEIGHT|MF_NOCLIP|MF_NOTHINK|MF_NOCLIPTHING
 }
 
 --Corona floorsprite, currently experimental
